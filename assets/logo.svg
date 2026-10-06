@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" width="280" height="64" fill="none">
+  <defs>
+    <linearGradient id="logo-green-grad" x1="6" y1="6" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="flame-grad" x1="30" y1="14" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="logo-shadow" x="0" y="0" width="60" height="60" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#064E3B" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Símbolo / Ícone -->
+  <g filter="url(#logo-shadow)">
+    <rect x="6" y="8" width="48" height="48" rx="14" fill="url(#logo-green-grad)"/>
+    <!-- Cruz da Saúde -->
+    <rect x="25.5" y="19" width="9" height="26" rx="3.5" fill="#FFFFFF"/>
+    <rect x="17" y="27.5" width="26" height="9" rx="3.5" fill="#FFFFFF"/>
+    <!-- Chama da Enfermagem (Florence) no coração da cruz -->
+    <path d="M30 21.5C30 21.5 27 25.5 27 28.5C27 30.15 28.35 31.5 30 31.5C31.65 31.5 33 30.15 33 28.5C33 25.5 30 21.5 30 21.5Z" fill="url(#flame-grad)"/>
+    <circle cx="30" cy="38" r="1.7" fill="url(#flame-grad)"/>
+  </g>
+
+  <!-- Tipografia do Nome EnferHub -->
+  <text x="68" y="36" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="-0.5px">
+    <tspan fill="#0F172A">Enfer</tspan><tspan fill="#059669">Hub</tspan>
+  </text>
+
+  <!-- Slogan / Tagline Técnica -->
+  <text x="69" y="49" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="9.5" font-weight="600" fill="#64748B" letter-spacing="1px">
+    PRONTUÁRIO &amp; SAE DIGITAL
+  </text>
+</svg>
+

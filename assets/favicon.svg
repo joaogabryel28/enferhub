@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <linearGradient id="eh-green-grad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="eh-glow" x1="32" y1="12" x2="32" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#064E3B" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Fundo Arredondado Moderno (Squircle) -->
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#eh-green-grad)" filter="url(#soft-shadow)"/>
+
+  <!-- Cruz de Saúde Base Sutil com cantos arredondados integrada -->
+  <g fill="#FFFFFF">
+    <!-- Cruz Clínica Minimalista -->
+    <rect x="27" y="16" width="10" height="32" rx="4" fill="#FFFFFF"/>
+    <rect x="16" y="27" width="32" height="10" rx="4" fill="#FFFFFF"/>
+    
+    <!-- Centro Dinâmico: Chama da Lâmpada de Florence Nightingale em contraste verde esmeralda -->
+    <!-- Representando o cuidar, vigília da enfermagem e a vida pulsante -->
+    <path d="M32 20C32 20 28.5 25 28.5 28.5C28.5 30.43 30.07 32 32 32C33.93 32 35.5 30.43 35.5 28.5C35.5 25 32 20 32 20Z" fill="url(#eh-glow)"/>
+    
+    <!-- Linha de Pulso / Conexão Estilizada no braço da cruz -->
+    <circle cx="32" cy="41" r="2" fill="url(#eh-glow)"/>
+  </g>
+</svg>
+

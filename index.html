@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EnferHub | Prontuário & SAE Inteligente para Enfermagem</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b'
+            },
+            clinical: {
+              surface: '#f8fafc',
+              card: '#ffffff',
+              border: '#e2e8f0',
+              text: '#0f172a',
+              muted: '#64748b'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* Scrollbar sutil para ambiente clínico */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- TOPO: Barra de Navegação Clean -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Marca -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-sm shadow-emerald-900/10 text-white font-bold text-xl">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xl font-extrabold tracking-tight text-slate-900">Enfer<span class="text-brand-600">Hub</span></span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full border border-brand-200">PROTÓTIPO SaaS</span>
+          </div>
+          <p class="text-[11px] text-slate-500 hidden sm:block">Plataforma de Prontuário &amp; Processo de Enfermagem (COFEN 736/2024)</p>
+        </div>
+      </div>
+
+      <!-- Links Centrais / Modos -->
+      <nav class="hidden md:flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-medium text-slate-600">
+        <button onclick="switchView('dashboard')" id="nav-dashboard" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm font-semibold transition">
+          Painel Geral
+        </button>
+        <button onclick="switchView('patient')" id="nav-patient" class="px-3.5 py-1.5 rounded-lg hover:text-slate-900 transition">
+          Prontuário Ativo
+        </button>
+        <button onclick="switchView('academic')" id="nav-academic" class="px-3.5 py-1.5 rounded-lg hover:text-slate-900 transition flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+          Área do Estudante (SAE &amp; Cálculo)
+        </button>
+      </nav>
+
+      <!-- Perfil / Identificação Profissional -->
+      <div class="flex items-center space-x-3">
+        <div class="text-right hidden sm:block">
+          <div class="text-xs font-semibold text-slate-800">Enfª. Isis Silva</div>
+          <div class="text-[11px] text-brand-600 font-medium">COREN-SP 542.890-ENF</div>
+        </div>
+        <div class="w-9 h-9 rounded-full bg-brand-100 border border-brand-300 text-brand-800 font-bold text-xs flex items-center justify-center">
+          IS
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- VIEW 1: PAINEL GERAL (DASHBOARD) -->
+    <div id="view-dashboard" class="space-y-6">
+      <!-- Banner de Boas-vindas e Resumo do Plantão/Consultório -->
+      <div class="bg-gradient-to-r from-emerald-900 via-brand-800 to-emerald-900 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 bg-brand-500/20 text-brand-200 text-xs px-2.5 py-1 rounded-full border border-brand-400/20 mb-2">
+            <svg class="w-3.5 h-3.5 text-brand-300" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/></svg>
+            Plantão Ativo • Unidade Clínica / Consultório Autônomo
+          </div>
+          <h1 class="text-2xl font-bold tracking-tight">Olá, Enfermeira Isis!</h1>
+          <p class="text-emerald-100/80 text-sm mt-1 max-w-xl">
+            Você tem <strong>3 evoluções pendentes</strong> e <strong>1 paciente de alto risco para Lesão por Pressão</strong>. O registro seguro protege você e seu paciente.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button onclick="openModal('modal-patient')" class="px-4 py-2.5 rounded-xl bg-white text-emerald-900 hover:bg-emerald-50 font-semibold text-xs transition shadow-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Novo Paciente
+          </button>
+          <button onclick="switchView('patient')" class="px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold text-xs transition shadow-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Abrir Prontuário Rápido
+          </button>
+        </div>
+      </div>
+
+      <!-- Métricas / KPIs Clínicos -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-brand-200 transition">
+          <div class="flex items-center justify-between text-slate-500">
+            <span class="text-xs font-medium">Pacientes Acompanhados</span>
+            <span class="p-2 bg-emerald-50 rounded-xl text-brand-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </span>
+          </div>
+          <div class="text-2xl font-bold text-slate-900 mt-2">18</div>
+          <div class="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
+            <span>↑ 3 novos nesta semana</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-brand-200 transition">
+          <div class="flex items-center justify-between text-slate-500">
+            <span class="text-xs font-medium">Evoluções Realizadas (Hoje)</span>
+            <span class="p-2 bg-blue-50 rounded-xl text-blue-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </span>
+          </div>
+          <div class="text-2xl font-bold text-slate-900 mt-2">12 / 15</div>
+          <div class="text-[11px] text-amber-600 font-medium mt-1 flex items-center gap-1">
+            <span>⏳ 3 aguardando fechamento</span>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-brand-200 transition">
+          <div class="flex items-center justify-between text-slate-500">
+            <span class="text-xs font-medium">Alerta de Risco (Braden ≤ 12)</span>
+            <span class="p-2 bg-rose-50 rounded-xl text-rose-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </span>
+          </div>
+          <div class="text-2xl font-bold text-rose-600 mt-2">1 Paciente</div>
+          <div class="text-[11px] text-slate-500 mt-1">
+            Dona Maria Lurdes (Leito 14B)
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs hover:border-brand-200 transition">
+          <div class="flex items-center justify-between text-slate-500">
+            <span class="text-xs font-medium">Conformidade COFEN 736/24</span>
+            <span class="p-2 bg-emerald-50 rounded-xl text-brand-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </span>
+          </div>
+          <div class="text-2xl font-bold text-emerald-600 mt-2">100%</div>
+          <div class="text-[11px] text-slate-500 mt-1">
+            5 Etapas do Processo válidas
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Pacientes Recentes -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Lista de Pacientes no Setor / Atendimento</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Selecione um paciente para abrir o prontuário completo ou lançar evolução de enfermagem.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Buscar por nome ou CPF..." class="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition w-48 sm:w-64">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-5">Paciente</th>
+                <th class="py-3 px-4">Idade / Leito</th>
+                <th class="py-3 px-4">Diagnóstico Médico</th>
+                <th class="py-3 px-4">Diagnóstico de Enfermagem (DE)</th>
+                <th class="py-3 px-4">Risco Braden</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-5 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-xs">
+              <!-- Paciente 1 -->
+              <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="switchView('patient')">
+                <td class="py-3.5 px-5">
+                  <div class="font-semibold text-slate-900">Maria de Lurdes Silveira</div>
+                  <div class="text-[11px] text-slate-400">Prontuário #48291 • Convênio</div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-600">
+                  74 anos <br><span class="text-[11px] text-slate-400">Leito 14B</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700">
+                  AVC Isquêmico + HAS
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-block bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded text-[11px] font-medium">
+                    Integridade da pele prejudicada
+                  </span>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full font-semibold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> 11 (Alto Risco)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[11px]">
+                    Pendente 18h
+                  </span>
+                </td>
+                <td class="py-3.5 px-5 text-right">
+                  <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
+                    Abrir Prontuário →
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Paciente 2 -->
+              <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="switchView('patient')">
+                <td class="py-3.5 px-5">
+                  <div class="font-semibold text-slate-900">Carlos Eduardo Rezende</div>
+                  <div class="text-[11px] text-slate-400">Prontuário #48305 • Particular</div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-600">
+                  42 anos <br><span class="text-[11px] text-slate-400">Leito 08A</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700">
+                  Pós-op Apendicectomia (1º DPO)
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-block bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium">
+                    Dor aguda (EVA 4)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 20 (Sem Risco)
+                  </span>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
+                    Evoluído às 14h
+                  </span>
+                </td>
+                <td class="py-3.5 px-5 text-right">
+                  <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
+                    Abrir Prontuário →
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Paciente 3 -->
+              <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="switchView('patient')">
+                <td class="py-3.5 px-5">
+                  <div class="font-semibold text-slate-900">Juliana Alves Barbosa</div>
+                  <div class="text-[11px] text-slate-400">Prontuário #48312 • Consultório Home Care</div>
+                </td>
+                <td class="py-3.5 px-4 text-slate-600">
+                  29 anos <br><span class="text-[11px] text-slate-400">Ambulatorial</span>
+                </td>
+                <td class="py-3.5 px-4 text-slate-700">
+                  Puerpério Fisiológico / Fissura Mamilar
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-block bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded text-[11px] font-medium">
+                    Amamentação ineficaz
+                  </span>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="inline-flex items-center gap-1 text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full text-[11px]">
+                    Não aplicável
+                  </span>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-[11px]">
+                    Consulta Agendada 16h
+                  </span>
+                </td>
+                <td class="py-3.5 px-5 text-right">
+                  <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
+                    Abrir Prontuário →
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: PRONTUÁRIO ATIVO DO PACIENTE (ANAMNESE + EVOLUÇÃO + ESCALAS) -->
+    <div id="view-patient" class="hidden space-y-6">
+      <!-- Cabeçalho do Prontuário do Paciente -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-brand-100 border border-brand-200 flex items-center justify-center text-brand-700 font-bold text-xl flex-shrink-0">
+            ML
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-xl font-extrabold text-slate-900">Dna. Maria de Lurdes Silveira</h2>
+              <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-medium">74 anos (22/04/1952)</span>
+              <span class="bg-brand-50 text-brand-700 border border-brand-200 text-xs px-2.5 py-0.5 rounded-full font-semibold">Leito 14B - Enfermaria Clínica</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1.5">
+              <span><strong>Sexo:</strong> Feminino</span>
+              <span><strong>Mãe:</strong> Sebastiana de Lurdes</span>
+              <span><strong>CPF:</strong> 142.***.***-09</span>
+              <span class="text-rose-600 font-semibold flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Alergias: DIPIRONA, PENICILINA
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 self-end lg:self-center">
+          <button onclick="switchView('dashboard')" class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition">
+            ← Voltar à Lista
+          </button>
+          <button onclick="gerarEvolucaoAutomatica()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Compilar Evolução SAE
+          </button>
+        </div>
+      </div>
+
+      <!-- Sinais Vitais em Tempo Real -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase">Pressão (PA)</div>
+          <div class="text-lg font-bold text-slate-800 mt-0.5">130/85</div>
+          <div class="text-[10px] text-slate-500">mmHg (Normotensa)</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase">Freq. Cardíaca</div>
+          <div class="text-lg font-bold text-slate-800 mt-0.5">78</div>
+          <div class="text-[10px] text-emerald-600">bpm (Normocárdica)</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase">Freq. Respiratória</div>
+          <div class="text-lg font-bold text-slate-800 mt-0.5">18</div>
+          <div class="text-[10px] text-emerald-600">irpm (Eupnéica)</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase">Saturação O₂</div>
+          <div class="text-lg font-bold text-slate-800 mt-0.5">97%</div>
+          <div class="text-[10px] text-emerald-600">Ar ambiente</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase">Temperatura</div>
+          <div class="text-lg font-bold text-slate-800 mt-0.5">36.6 °C</div>
+          <div class="text-[10px] text-emerald-600">Afebril</div>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase">Glicemia Capilar</div>
+          <div class="text-lg font-bold text-slate-800 mt-0.5">114</div>
+          <div class="text-[10px] text-slate-500">mg/dL (HGT Jejum)</div>
+        </div>
+      </div>
+
+      <!-- Abas de Trabalho Clínico -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="border-b border-slate-200 bg-slate-50/50 flex flex-wrap text-xs font-semibold text-slate-600">
+          <button onclick="tabSection('anamnese')" id="tab-btn-anamnese" class="px-5 py-3 border-b-2 border-brand-600 text-brand-700 bg-white transition flex items-center gap-1.5">
+            <span>📋</span> 1. Avaliação &amp; Anamnese Céfalo-Caudal
+          </button>
+          <button onclick="tabSection('escalas')" id="tab-btn-escalas" class="px-5 py-3 border-b-2 border-transparent hover:text-slate-900 transition flex items-center gap-1.5">
+            <span>📊</span> 2. Escalas Clínicas (Braden / Dor)
+          </button>
+          <button onclick="tabSection('evolucao')" id="tab-btn-evolucao" class="px-5 py-3 border-b-2 border-transparent hover:text-slate-900 transition flex items-center gap-1.5">
+            <span>✍️</span> 3. Diagnósticos &amp; Evolução de Enfermagem
+          </button>
+          <button onclick="tabSection('prescricao')" id="tab-btn-prescricao" class="px-5 py-3 border-b-2 border-transparent hover:text-slate-900 transition flex items-center gap-1.5">
+            <span>💊</span> 4. Prescrição de Cuidados &amp; Checagem
+          </button>
+        </div>
+
+        <div class="p-6">
+          <!-- ABA 1: ANAMNESE E EXAME FÍSICO -->
+          <div id="section-anamnese" class="space-y-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Exame Físico Céfalo-Caudal Guiado</h3>
+                <p class="text-xs text-slate-500">Preencha rapidamente os dados para estruturação automática do texto da evolução.</p>
+              </div>
+              <span class="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">Checklist Rápido</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+              <!-- Neurológico -->
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">🧠 Neurológico / Psíquico</span>
+                <div>
+                  <label class="block text-slate-500 text-[11px] mb-1">Nível de Consciência:</label>
+                  <select id="ef-neurologico" class="w-full p-2 bg-white border border-slate-200 rounded-lg focus:ring-1 focus:ring-brand-500">
+                    <option value="Consciente, orientada em tempo e espaço, colaborativa">Consciente, orientada e colaborativa</option>
+                    <option value="Sonolenta, desperta ao chamado verbal">Sonolenta, desperta ao chamado</option>
+                    <option value="Confusa, desorientada">Confusa / Desorientada</option>
+                    <option value="Torporosa / Resposta a estímulo doloroso">Torporosa</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="pupilas-isocoricas" checked class="rounded text-brand-600">
+                  <label for="pupilas-isocoricas" class="text-slate-600">Pupilas isocóricas e fotorreagentes</label>
+                </div>
+              </div>
+
+              <!-- Respiratório -->
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">🫁 Padrão Respiratório</span>
+                <div>
+                  <label class="block text-slate-500 text-[11px] mb-1">Ausculta Pulmonar:</label>
+                  <select id="ef-respiratorio" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                    <option value="Murmúrios vesiculares presentes bilateralmente, sem ruídos adventícios">MV presentes bilateralmente, s/ ruídos</option>
+                    <option value="Roncos e sibilos esparsos em bases">Roncos e sibilos em bases</option>
+                    <option value="Estertores crepitantes em terço inferior">Estertores crepitantes</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="suporte-o2" class="rounded text-brand-600">
+                  <label for="suporte-o2" class="text-slate-600">Em oxigenoterapia (Cateter O₂)</label>
+                </div>
+              </div>
+
+              <!-- Cardiovascular & Perfusão -->
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">❤️ Cardiovascular &amp; Perfusão</span>
+                <div>
+                  <label class="block text-slate-500 text-[11px] mb-1">Bulhas &amp; Pulsos:</label>
+                  <select id="ef-cardio" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                    <option value="Bulhas cardíacas normofonéticas em 2T, sem sopros. Perfusão periférica < 2s">BCNF em 2T, s/ sopros. Perfusão < 2s</option>
+                    <option value="Bulhas arritmicas, pulsos palpáveis e cheios">Bulhas arrítmicas</option>
+                    <option value="Extremidades frias, perfusão lentificada > 3s">Perfusão lentificada (>3s)</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                  <input type="checkbox" id="edema-mmii" checked class="rounded text-brand-600">
+                  <label for="edema-mmii" class="text-slate-600">Edema em MMII (+/4+ com cacifo)</label>
+                </div>
+              </div>
+
+              <!-- Abdome & Eliminações -->
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">🍏 Abdome &amp; Trato Digestório</span>
+                <div>
+                  <label class="block text-slate-500 text-[11px] mb-1">Palpação &amp; Ruídos Hidroaéreos:</label>
+                  <select id="ef-abdome" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                    <option value="Abdome globoso, flácido, indolor à palpação, RHA presentes">Globoso, flácido, indolor, RHA presentes</option>
+                    <option value="Abdome tenso, doloroso à palpação">Tenso e doloroso</option>
+                    <option value="Abdome distendido com constipação intestinal">Distendido (evacuações ausentes > 3 dias)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Tegumentar / Pele & Lesões -->
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">🩹 Tegumentar / Pele</span>
+                <div>
+                  <label class="block text-slate-500 text-[11px] mb-1">Condição da Pele:</label>
+                  <select id="ef-pele" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                    <option value="Pele ressecada, hiperemia não branqueável em região sacral (Estágio 1 LPP)">Hiperemia sacral (LPP Estágio 1)</option>
+                    <option value="Pele íntegra, hidratada e sem lesões">Íntegra e hidratada</option>
+                    <option value="Lesão por pressão estágio 2 com exsudato seroso">Lesão por pressão estágio 2</option>
+                  </select>
+                </div>
+                <p class="text-[10px] text-rose-600 font-medium">Requer plano de mudança de decúbito 2/2h.</p>
+              </div>
+
+              <!-- Dispositivos & Acessos -->
+              <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+                <span class="font-bold text-slate-800 flex items-center gap-1.5">💉 Dispositivos Invasivos</span>
+                <div>
+                  <label class="block text-slate-500 text-[11px] mb-1">Acesso Venoso:</label>
+                  <select id="ef-acesso" class="w-full p-2 bg-white border border-slate-200 rounded-lg">
+                    <option value="AVP em MSD (veia cefálica) com Jelco 20G, fixação íntegra, sem sinais flogísticos (D2)">AVP em MSD (Jelco 20G, s/ flogose)</option>
+                    <option value="Cateter Venoso Central (CVC) em jugular interna">CVC em jugular interna</option>
+                    <option value="Sem acesso venoso no momento">Sem acesso venoso</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 2: ESCALAS CLÍNICAS (BRADEN & DOR) -->
+          <div id="section-escalas" class="hidden space-y-6">
+            <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 class="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                  Escala de Braden (Risco de Lesão por Pressão)
+                </h3>
+                <p class="text-xs text-emerald-800">Cálculo dinâmico automatizado para auditoria e segurança do paciente.</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-semibold text-slate-600">Pontuação Total:</span>
+                <div class="text-2xl font-black text-rose-600" id="braden-total">11 / 23</div>
+                <span class="text-[11px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold" id="braden-classificacao">Alto Risco</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+              <!-- Subescala 1 -->
+              <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                <label class="font-bold text-slate-700 block mb-1">1. Percepção Sensorial</label>
+                <select class="w-full p-1.5 border border-slate-200 rounded text-xs braden-input" onchange="calcularBraden()">
+                  <option value="1">1 - Totalmente limitado</option>
+                  <option value="2" selected>2 - Muito limitado</option>
+                  <option value="3">3 - Levemente limitado</option>
+                  <option value="4">4 - Nenhuma limitação</option>
+                </select>
+              </div>
+
+              <!-- Subescala 2 -->
+              <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                <label class="font-bold text-slate-700 block mb-1">2. Umidade</label>
+                <select class="w-full p-1.5 border border-slate-200 rounded text-xs braden-input" onchange="calcularBraden()">
+                  <option value="1">1 - Constantemente úmida</option>
+                  <option value="2" selected>2 - Muito úmida</option>
+                  <option value="3">3 - Ocasionalmente úmida</option>
+                  <option value="4">4 - Raramente úmida</option>
+                </select>
+              </div>
+
+              <!-- Subescala 3 -->
+              <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                <label class="font-bold text-slate-700 block mb-1">3. Atividade</label>
+                <select class="w-full p-1.5 border border-slate-200 rounded text-xs braden-input" onchange="calcularBraden()">
+                  <option value="1" selected>1 - Confinado ao leito</option>
+                  <option value="2">2 - Confinado à cadeira</option>
+                  <option value="3">3 - Deambula ocasionalmente</option>
+                  <option value="4">4 - Deambula frequentemente</option>
+                </select>
+              </div>
+
+              <!-- Subescala 4 -->
+              <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                <label class="font-bold text-slate-700 block mb-1">4. Mobilidade</label>
+                <select class="w-full p-1.5 border border-slate-200 rounded text-xs braden-input" onchange="calcularBraden()">
+                  <option value="1">1 - Totalmente imóvel</option>
+                  <option value="2" selected>2 - Bastante limitado</option>
+                  <option value="3">3 - Levemente limitado</option>
+                  <option value="4">4 - Sem limitações</option>
+                </select>
+              </div>
+
+              <!-- Subescala 5 -->
+              <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                <label class="font-bold text-slate-700 block mb-1">5. Nutrição</label>
+                <select class="w-full p-1.5 border border-slate-200 rounded text-xs braden-input" onchange="calcularBraden()">
+                  <option value="1">1 - Muito pobre</option>
+                  <option value="2" selected>2 - Provavelmente inadequada</option>
+                  <option value="3">3 - Adequada</option>
+                  <option value="4">4 - Excelente</option>
+                </select>
+              </div>
+
+              <!-- Subescala 6 -->
+              <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                <label class="font-bold text-slate-700 block mb-1">6. Fricção &amp; Cisalhamento</label>
+                <select class="w-full p-1.5 border border-slate-200 rounded text-xs braden-input" onchange="calcularBraden()">
+                  <option value="1">1 - Problema (frequente)</option>
+                  <option value="2" selected>2 - Problema potencial</option>
+                  <option value="3">3 - Nenhum problema aparente</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Escala Visual Analógica de Dor (EVA) -->
+            <div class="pt-4 border-t border-slate-100">
+              <label class="font-bold text-slate-800 text-xs block mb-2">Escala de Dor (EVA 0 a 10): <span id="pain-val" class="text-brand-600 font-black">2 - Dor Leve</span></label>
+              <input type="range" min="0" max="10" value="2" class="w-full accent-emerald-600 cursor-pointer" oninput="updatePain(this.value)">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                <span>0 (Sem dor)</span>
+                <span>2 (Leve)</span>
+                <span>5 (Moderada)</span>
+                <span>8 (Intensa)</span>
+                <span>10 (Pior dor imaginável)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 3: DIAGNÓSTICO E EVOLUÇÃO (COFEN 736/2024) -->
+          <div id="section-evolucao" class="hidden space-y-5">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Evolução de Enfermagem Estruturada (COFEN 736/2024)</h3>
+              <p class="text-xs text-slate-500">O texto abaixo é gerado dinamicamente com base nas observações e exame físico, podendo ser editado livremente.</p>
+            </div>
+
+            <!-- Diagnósticos de Enfermagem NANDA/CIPE sugeridos -->
+            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span class="text-xs font-bold text-slate-700">Diagnósticos de Enfermagem Identificados:</span>
+              <div class="flex flex-wrap gap-2 text-xs">
+                <span class="inline-flex items-center gap-1 bg-white border border-brand-300 text-brand-800 px-2.5 py-1 rounded-lg">
+                  ✓ Integridade da pele prejudicada (região sacral)
+                </span>
+                <span class="inline-flex items-center gap-1 bg-white border border-brand-300 text-brand-800 px-2.5 py-1 rounded-lg">
+                  ✓ Risco de lesão por pressão (Braden = 11)
+                </span>
+                <span class="inline-flex items-center gap-1 bg-white border border-brand-300 text-brand-800 px-2.5 py-1 rounded-lg">
+                  ✓ Mobilidade no leito prejudicada r/a sequela neurológica
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Texto Final da Evolução (com carimbo e assinatura digital):</label>
+              <textarea id="texto-evolucao" rows="7" class="w-full text-xs font-mono p-3.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 text-slate-800 leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <div class="flex items-center gap-2 text-[11px] text-slate-500">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                Assinatura Digital Certificada ICP-Brasil pronta para registro
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="copiarEvolucao()" class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition">
+                  Copiar Texto
+                </button>
+                <button onclick="salvarEvolucao()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm">
+                  Salvar no Prontuário &amp; Assinar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 4: PRESCRIÇÃO DE ENFERMAGEM -->
+          <div id="section-prescricao" class="hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Prescrição de Enfermagem (Cuidados &amp; Intervenções)</h3>
+                <p class="text-xs text-slate-500">Atividades a serem executadas e checadas pela equipe de enfermagem.</p>
+              </div>
+              <button class="px-3 py-1.5 bg-brand-50 text-brand-700 border border-brand-200 rounded-lg text-xs font-semibold hover:bg-brand-100 transition">
+                + Adicionar Cuidado
+              </button>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" checked class="mt-0.5 rounded text-brand-600">
+                  <div>
+                    <div class="font-bold text-slate-800">Mudança de decúbito de 2 em 2 horas (DD, DLD, DLE)</div>
+                    <div class="text-[11px] text-slate-500">Justificativa: Prevenção de progressão de LPP (Braden 11)</div>
+                  </div>
+                </div>
+                <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">08h | 10h | 12h | 14h | 16h</span>
+              </div>
+
+              <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" checked class="mt-0.5 rounded text-brand-600">
+                  <div>
+                    <div class="font-bold text-slate-800">Aplicação de Ácidos Graxos Essenciais (AGE) em proeminências ósseas e sacral</div>
+                    <div class="text-[11px] text-slate-500">Após banho no leito e sempre que pele higienizada</div>
+                  </div>
+                </div>
+                <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">1x ao dia (Manhã)</span>
+              </div>
+
+              <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
+                <div class="flex items-start gap-3">
+                  <input type="checkbox" class="mt-0.5 rounded text-brand-600">
+                  <div>
+                    <div class="font-bold text-slate-800">Manter cabeceira elevada a 30° - 45°</div>
+                    <div class="text-[11px] text-slate-500">Prevenção de aspiração e redução de pressão em sacro</div>
+                  </div>
+                </div>
+                <span class="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono">Contínuo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: ÁREA DO ESTUDANTE (SAE GUIADA & CALCULADORA) -->
+    <div id="view-academic" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-teal-800 to-brand-800 rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="bg-teal-700/60 text-teal-200 text-xs px-2.5 py-1 rounded-full border border-teal-500/30 font-semibold mb-2 inline-block">
+            MÓDULO ACADÊMICO &amp; ESTÁGIOS
+          </span>
+          <h2 class="text-2xl font-bold">Guia Rápido &amp; Calculadoras Clínicas</h2>
+          <p class="text-teal-100/80 text-sm mt-1 max-w-xl">
+            Projetado para facilitar estágios curriculares, estudos de caso e memorização das etapas da SAE e cálculos de dosagens.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Calculadora de Gotejamento de Soro -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              💧 Calculadora de Gotejamento de Soro
+            </h3>
+            <span class="text-[11px] bg-brand-50 text-brand-700 font-semibold px-2 py-0.5 rounded">Fórmula Oficial</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block text-slate-600 font-medium mb-1">Volume Total (mL):</label>
+              <input type="number" id="calc-volume" value="500" class="w-full p-2.5 border border-slate-200 rounded-xl font-bold text-slate-800">
+            </div>
+            <div>
+              <label class="block text-slate-600 font-medium mb-1">Tempo de Infusão (Horas):</label>
+              <input type="number" id="calc-tempo" value="8" class="w-full p-2.5 border border-slate-200 rounded-xl font-bold text-slate-800">
+            </div>
+          </div>
+
+          <button onclick="calcularGotejamento()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition">
+            Calcular Macrogotas e Microgotas
+          </button>
+
+          <!-- Resultados do Cálculo -->
+          <div class="grid grid-cols-2 gap-3 pt-2 text-center">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <span class="text-[11px] text-slate-500 block">Macrogotas / min (Gts)</span>
+              <span class="text-xl font-black text-brand-700" id="res-macro">21 gts/min</span>
+              <span class="text-[10px] text-slate-400 block mt-0.5">V / (T x 3)</span>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <span class="text-[11px] text-slate-500 block">Microgotas / min (Gtts)</span>
+              <span class="text-xl font-black text-brand-700" id="res-micro">63 microgts/min</span>
+              <span class="text-[10px] text-slate-400 block mt-0.5">V / T</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mnemônico do Processo de Enfermagem (COFEN 736/2024) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              📚 As 5 Etapas do Processo (Res. COFEN 736/2024)
+            </h3>
+            <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Guia de Estágio</span>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-xs">1</span>
+              <div>
+                <strong class="text-slate-800">Avaliação de Enfermagem:</strong>
+                <p class="text-slate-500 text-[11px]">Coleta de dados subjetivos e objetivos (anamnese + exame físico).</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-xs">2</span>
+              <div>
+                <strong class="text-slate-800">Diagnóstico de Enfermagem:</strong>
+                <p class="text-slate-500 text-[11px]">Identificação das necessidades humanas básicas (taxonomias NANDA-I ou CIPE).</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-xs">3</span>
+              <div>
+                <strong class="text-slate-800">Planejamento de Enfermagem:</strong>
+                <p class="text-slate-500 text-[11px]">Definição dos resultados esperados (NOC) e prescrição de cuidados (NIC).</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-xs">4</span>
+              <div>
+                <strong class="text-slate-800">Implementação de Enfermagem:</strong>
+                <p class="text-slate-500 text-[11px]">Execução e checagem das intervenções pela equipe de enfermagem.</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-800 font-bold flex items-center justify-center text-xs">5</span>
+              <div>
+                <strong class="text-slate-800">Evolução de Enfermagem:</strong>
+                <p class="text-slate-500 text-[11px]">Avaliação da resposta do paciente e adequação contínua do plano de cuidado.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: CADASTRAR NOVO PACIENTE -->
+  <div id="modal-patient" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900">Cadastrar Novo Paciente</h3>
+        <button onclick="closeModal('modal-patient')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Nome Completo:</label>
+          <input type="text" placeholder="Ex: João da Silva Santos" class="w-full p-2.5 border border-slate-200 rounded-xl">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Data de Nascimento:</label>
+            <input type="date" class="w-full p-2.5 border border-slate-200 rounded-xl">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Leito / Local:</label>
+            <input type="text" placeholder="Ex: Leito 12 / Domiciliar" class="w-full p-2.5 border border-slate-200 rounded-xl">
+          </div>
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Alergias Conhecidas (Separe por vírgulas):</label>
+          <input type="text" placeholder="Ex: Dipirona, Látex" class="w-full p-2.5 border border-slate-200 rounded-xl">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeModal('modal-patient')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="salvarNovoPaciente()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700">Salvar Paciente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ CLEAN -->
+  <footer class="bg-white border-t border-slate-200 mt-12 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-800">EnferHub</span>
+        <span>— O SaaS definitivo para estudantes e profissionais de enfermagem.</span>
+      </div>
+      <div>
+        Em conformidade com a <strong>Resolução COFEN nº 736/2024</strong> e LGPD em Saúde.
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS INTERATIVOS -->
+  <script>
+    // Navegação entre Views
+    function switchView(viewName) {
+      document.getElementById('view-dashboard').classList.add('hidden');
+      document.getElementById('view-patient').classList.add('hidden');
+      document.getElementById('view-academic').classList.add('hidden');
+
+      document.getElementById('nav-dashboard').className = "px-3.5 py-1.5 rounded-lg hover:text-slate-900 transition";
+      document.getElementById('nav-patient').className = "px-3.5 py-1.5 rounded-lg hover:text-slate-900 transition";
+      document.getElementById('nav-academic').className = "px-3.5 py-1.5 rounded-lg hover:text-slate-900 transition flex items-center gap-1";
+
+      if(viewName === 'dashboard') {
+        document.getElementById('view-dashboard').classList.remove('hidden');
+        document.getElementById('nav-dashboard').className = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm font-semibold transition";
+      } else if(viewName === 'patient') {
+        document.getElementById('view-patient').classList.remove('hidden');
+        document.getElementById('nav-patient').className = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm font-semibold transition";
+        gerarEvolucaoAutomatica();
+      } else if(viewName === 'academic') {
+        document.getElementById('view-academic').classList.remove('hidden');
+        document.getElementById('nav-academic').className = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm font-semibold transition flex items-center gap-1";
+      }
+    }
+
+    // Abas dentro do prontuário
+    function tabSection(section) {
+      const tabs = ['anamnese', 'escalas', 'evolucao', 'prescricao'];
+      tabs.forEach(t => {
+        document.getElementById('section-' + t).classList.add('hidden');
+        const btn = document.getElementById('tab-btn-' + t);
+        btn.classList.remove('border-brand-600', 'text-brand-700', 'bg-white');
+        btn.classList.add('border-transparent');
+      });
+
+      document.getElementById('section-' + section).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-btn-' + section);
+      activeBtn.classList.add('border-brand-600', 'text-brand-700', 'bg-white');
+      activeBtn.classList.remove('border-transparent');
+
+      if(section === 'evolucao') {
+        gerarEvolucaoAutomatica();
+      }
+    }
+
+    // Escala de Braden
+    function calcularBraden() {
+      const selects = document.querySelectorAll('.braden-input');
+      let soma = 0;
+      selects.forEach(s => soma += parseInt(s.value));
+      
+      const totalEl = document.getElementById('braden-total');
+      const classifEl = document.getElementById('braden-classificacao');
+      totalEl.innerText = `${soma} / 23`;
+
+      if(soma <= 12) {
+        classifEl.innerText = 'Alto Risco';
+        classifEl.className = 'text-[11px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold';
+        totalEl.className = 'text-2xl font-black text-rose-600';
+      } else if(soma <= 14) {
+        classifEl.innerText = 'Risco Moderado';
+        classifEl.className = 'text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold';
+        totalEl.className = 'text-2xl font-black text-amber-600';
+      } else if(soma <= 18) {
+        classifEl.innerText = 'Baixo Risco';
+        classifEl.className = 'text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold';
+        totalEl.className = 'text-2xl font-black text-blue-600';
+      } else {
+        classifEl.innerText = 'Sem Risco';
+        classifEl.className = 'text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold';
+        totalEl.className = 'text-2xl font-black text-emerald-600';
+      }
+    }
+
+    // Atualização da régua de dor
+    function updatePain(val) {
+      const label = document.getElementById('pain-val');
+      const v = parseInt(val);
+      if(v === 0) label.innerText = "0 - Sem Dor";
+      else if(v <= 3) label.innerText = `${v} - Dor Leve`;
+      else if(v <= 6) label.innerText = `${v} - Dor Moderada`;
+      else if(v <= 9) label.innerText = `${v} - Dor Severa / Intensa`;
+      else label.innerText = "10 - Pior Dor Imaginável";
+    }
+
+    // Gerador de Texto Técnico de Evolução de Enfermagem
+    function gerarEvolucaoAutomatica() {
+      const neuro = document.getElementById('ef-neurologico').value;
+      const resp = document.getElementById('ef-respiratorio').value;
+      const cardio = document.getElementById('ef-cardio').value;
+      const abdome = document.getElementById('ef-abdome').value;
+      const pele = document.getElementById('ef-pele').value;
+      const acesso = document.getElementById('ef-acesso').value;
+      const bradenScore = document.getElementById('braden-total').innerText;
+
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      const horaAtual = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
+      const evolucao = 
+`[EVOLUÇÃO DE ENFERMAGEM - ${dataAtual} às ${horaAtual}]
+PACIENTE: Maria de Lurdes Silveira | LEITO: 14B | DIAGNÓSTICO MÉDICO: AVC Isquêmico + HAS
+
+SINAIS VITAIS:
+PA: 130/85 mmHg | FC: 78 bpm | FR: 18 irpm | SpO₂: 97% em AA | Tax: 36.6 °C | HGT: 114 mg/dL | EVA Dor: 2/10.
+
+AVALIAÇÃO CÉFALO-CAUDAL (EXAME FÍSICO):
+- Neurológico: ${neuro}. Pupilas isocóricas e fotorreagentes.
+- Respiratório: ${resp}. Padrão eupnéico.
+- Cardiovascular: ${cardio}. Edema de membros inferiores presente (+/4+).
+- Trato Gastrointestinal: ${abdome}. Dieta hipossódica bem tolerada.
+- Tegumentar: ${pele}. Braden: ${bradenScore} (Alto Risco para Lesão por Pressão).
+- Dispositivos: ${acesso}.
+
+DIAGNÓSTICOS DE ENFERMAGEM (COFEN 736/2024):
+1. Integridade da pele prejudicada r/a imobilidade física e umidade.
+2. Risco de lesão por pressão associado a escore de Braden crítico.
+3. Risco de quedas r/a déficit motor sequelar.
+
+CONDUTA & PRESCRIÇÃO:
+- Instituído protocolo de mudança de decúbito de 2/2h com coxim de alívio.
+- Hidratação de pele e AGE em região sacral mantidos.
+- Grades do leito elevadas. Orientado acompanhante quanto a prevenção de quedas.
+
+Enfª. Isis Silva — COREN-SP 542.890-ENF`;
+
+      document.getElementById('texto-evolucao').value = evolucao;
+    }
+
+    // Calculadora de gotejamento de soro
+    function calcularGotejamento() {
+      const vol = parseFloat(document.getElementById('calc-volume').value) || 0;
+      const temp = parseFloat(document.getElementById('calc-tempo').value) || 1;
+
+      const macrogotas = Math.round(vol / (temp * 3));
+      const microgotas = Math.round(vol / temp);
+
+      document.getElementById('res-macro').innerText = `${macrogotas} gts/min`;
+      document.getElementById('res-micro').innerText = `${microgotas} microgts/min`;
+    }
+
+    // Ações de feedback
+    function copiarEvolucao() {
+      const copyText = document.getElementById("texto-evolucao");
+      navigator.clipboard.writeText(copyText.value);
+      alert("✅ Texto da evolução copiado para a área de transferência!");
+    }
+
+    function salvarEvolucao() {
+      alert("✅ Evolução de Enfermagem assinada e salva com sucesso no prontuário!");
+      switchView('dashboard');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function salvarNovoPaciente() {
+      alert("✅ Paciente cadastrado com sucesso no sistema!");
+      closeModal('modal-patient');
+    }
+  </script>
+</body>
+</html>
+
