@@ -48,6 +48,34 @@
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Estilos para Impressão e Exportação em PDF A4 */
+    @media print {
+      body { background: white !important; color: black !important; padding: 0 !important; }
+      body > header, body > main, body > footer, #toast-container, .no-print { display: none !important; }
+      #modal-pdf {
+        display: block !important;
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        backdrop-filter: none !important;
+      }
+      #modal-pdf > div {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      @page {
+        size: A4;
+        margin: 12mm 15mm 15mm 15mm;
+      }
+    }
   </style>
 </head>
 <body class="bg-[#F8FAFC] text-slate-800 antialiased min-h-screen flex flex-col">
@@ -138,9 +166,9 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </span>
           </div>
-          <div class="text-2xl font-bold text-slate-900 mt-2">18</div>
+          <div class="text-2xl font-bold text-slate-900 mt-2" id="stat-total-pacientes">3</div>
           <div class="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
-            <span>↑ 3 novos nesta semana</span>
+            <span id="stat-novos-semana">● Salvo no LocalStorage</span>
           </div>
         </div>
 
@@ -152,9 +180,9 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             </span>
           </div>
-          <div class="text-2xl font-bold text-slate-900 mt-2">12 / 15</div>
+          <div class="text-2xl font-bold text-slate-900 mt-2" id="stat-evolucoes-feitas">1 / 3</div>
           <div class="text-[11px] text-amber-600 font-medium mt-1 flex items-center gap-1">
-            <span>⏳ 3 aguardando fechamento</span>
+            <span id="stat-pendentes">⏳ 2 aguardando fechamento</span>
           </div>
         </div>
 
@@ -166,9 +194,9 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             </span>
           </div>
-          <div class="text-2xl font-bold text-rose-600 mt-2">1 Paciente</div>
-          <div class="text-[11px] text-slate-500 mt-1">
-            Dona Maria Lurdes (Leito 14B)
+          <div class="text-2xl font-bold text-rose-600 mt-2" id="stat-risco-braden">1 Paciente</div>
+          <div class="text-[11px] text-slate-500 mt-1 truncate" id="stat-detalhe-risco">
+            Dna. Maria de Lurdes (Leito 14B)
           </div>
         </div>
 
@@ -195,7 +223,7 @@
             <p class="text-xs text-slate-500 mt-0.5">Selecione um paciente para abrir o prontuário completo ou lançar evolução de enfermagem.</p>
           </div>
           <div class="flex items-center gap-2">
-            <input type="text" placeholder="Buscar por nome ou CPF..." class="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition w-48 sm:w-64">
+            <input type="text" id="input-busca-pacientes" oninput="filtrarPacientes(this.value)" placeholder="Buscar por nome ou leito..." class="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition w-48 sm:w-64">
           </div>
         </div>
 
@@ -212,108 +240,8 @@
                 <th class="py-3 px-5 text-right">Ação</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-xs">
-              <!-- Paciente 1 -->
-              <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="switchView('patient')">
-                <td class="py-3.5 px-5">
-                  <div class="font-semibold text-slate-900">Maria de Lurdes Silveira</div>
-                  <div class="text-[11px] text-slate-400">Prontuário #48291 • Convênio</div>
-                </td>
-                <td class="py-3.5 px-4 text-slate-600">
-                  74 anos <br><span class="text-[11px] text-slate-400">Leito 14B</span>
-                </td>
-                <td class="py-3.5 px-4 text-slate-700">
-                  AVC Isquêmico + HAS
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-block bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded text-[11px] font-medium">
-                    Integridade da pele prejudicada
-                  </span>
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-flex items-center gap-1 text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full font-semibold text-[11px]">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> 11 (Alto Risco)
-                  </span>
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded text-[11px]">
-                    Pendente 18h
-                  </span>
-                </td>
-                <td class="py-3.5 px-5 text-right">
-                  <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
-                    Abrir Prontuário →
-                  </button>
-                </td>
-              </tr>
-
-              <!-- Paciente 2 -->
-              <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="switchView('patient')">
-                <td class="py-3.5 px-5">
-                  <div class="font-semibold text-slate-900">Carlos Eduardo Rezende</div>
-                  <div class="text-[11px] text-slate-400">Prontuário #48305 • Particular</div>
-                </td>
-                <td class="py-3.5 px-4 text-slate-600">
-                  42 anos <br><span class="text-[11px] text-slate-400">Leito 08A</span>
-                </td>
-                <td class="py-3.5 px-4 text-slate-700">
-                  Pós-op Apendicectomia (1º DPO)
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-block bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded text-[11px] font-medium">
-                    Dor aguda (EVA 4)
-                  </span>
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold text-[11px]">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 20 (Sem Risco)
-                  </span>
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
-                    Evoluído às 14h
-                  </span>
-                </td>
-                <td class="py-3.5 px-5 text-right">
-                  <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
-                    Abrir Prontuário →
-                  </button>
-                </td>
-              </tr>
-
-              <!-- Paciente 3 -->
-              <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="switchView('patient')">
-                <td class="py-3.5 px-5">
-                  <div class="font-semibold text-slate-900">Juliana Alves Barbosa</div>
-                  <div class="text-[11px] text-slate-400">Prontuário #48312 • Consultório Home Care</div>
-                </td>
-                <td class="py-3.5 px-4 text-slate-600">
-                  29 anos <br><span class="text-[11px] text-slate-400">Ambulatorial</span>
-                </td>
-                <td class="py-3.5 px-4 text-slate-700">
-                  Puerpério Fisiológico / Fissura Mamilar
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-block bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded text-[11px] font-medium">
-                    Amamentação ineficaz
-                  </span>
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="inline-flex items-center gap-1 text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full text-[11px]">
-                    Não aplicável
-                  </span>
-                </td>
-                <td class="py-3.5 px-4">
-                  <span class="text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-[11px]">
-                    Consulta Agendada 16h
-                  </span>
-                </td>
-                <td class="py-3.5 px-5 text-right">
-                  <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
-                    Abrir Prontuário →
-                  </button>
-                </td>
-              </tr>
+            <tbody id="tabela-pacientes-tbody" class="divide-y divide-slate-100 text-xs">
+              <!-- Renderizado dinamicamente via JavaScript do LocalStorage -->
             </tbody>
           </table>
         </div>
@@ -325,30 +253,34 @@
       <!-- Cabeçalho do Prontuário do Paciente -->
       <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div class="flex items-start gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-brand-100 border border-brand-200 flex items-center justify-center text-brand-700 font-bold text-xl flex-shrink-0">
+          <div class="w-14 h-14 rounded-2xl bg-brand-100 border border-brand-200 flex items-center justify-center text-brand-700 font-bold text-xl flex-shrink-0" id="paciente-avatar">
             ML
           </div>
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <h2 class="text-xl font-extrabold text-slate-900">Dna. Maria de Lurdes Silveira</h2>
-              <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-medium">74 anos (22/04/1952)</span>
-              <span class="bg-brand-50 text-brand-700 border border-brand-200 text-xs px-2.5 py-0.5 rounded-full font-semibold">Leito 14B - Enfermaria Clínica</span>
+              <h2 class="text-xl font-extrabold text-slate-900" id="paciente-nome">Dna. Maria de Lurdes Silveira</h2>
+              <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-full font-medium" id="paciente-idade">74 anos</span>
+              <span class="bg-brand-50 text-brand-700 border border-brand-200 text-xs px-2.5 py-0.5 rounded-full font-semibold" id="paciente-leito">Leito 14B - Enfermaria Clínica</span>
             </div>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1.5">
-              <span><strong>Sexo:</strong> Feminino</span>
-              <span><strong>Mãe:</strong> Sebastiana de Lurdes</span>
-              <span><strong>CPF:</strong> 142.***.***-09</span>
-              <span class="text-rose-600 font-semibold flex items-center gap-1">
+              <span><strong>Sexo:</strong> <span id="paciente-sexo">Feminino</span></span>
+              <span><strong>Prontuário:</strong> <span id="paciente-prontuario">#48291</span></span>
+              <span><strong>CPF:</strong> <span id="paciente-cpf">142.***.***-09</span></span>
+              <span class="text-rose-600 font-semibold flex items-center gap-1" id="paciente-alergias-container">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                Alergias: DIPIRONA, PENICILINA
+                Alergias: <span id="paciente-alergias">DIPIRONA, PENICILINA</span>
               </span>
             </div>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 self-end lg:self-center">
+        <div class="flex flex-wrap items-center gap-2 self-end lg:self-center">
           <button onclick="switchView('dashboard')" class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition">
             ← Voltar à Lista
+          </button>
+          <button onclick="abrirModalPdf()" class="px-3.5 py-2 border border-brand-300 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Exportar PDF Oficial
           </button>
           <button onclick="gerarEvolucaoAutomatica()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -645,13 +577,31 @@
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 Assinatura Digital Certificada ICP-Brasil pronta para registro
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <button onclick="copiarEvolucao()" class="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition">
                   Copiar Texto
                 </button>
-                <button onclick="salvarEvolucao()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm">
+                <button onclick="abrirModalPdf()" class="px-3.5 py-2 border border-brand-300 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+                  <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  Exportar PDF Oficial
+                </button>
+                <button onclick="salvarEvolucao()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                   Salvar no Prontuário &amp; Assinar
                 </button>
+              </div>
+            </div>
+
+            <!-- Histórico de Evoluções Salvas do Paciente -->
+            <div class="pt-6 border-t border-slate-200">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                  <span>📂</span> Histórico de Evoluções Registradas no Prontuário
+                </h4>
+                <span class="text-[11px] text-slate-400">Armazenado no LocalStorage</span>
+              </div>
+              <div id="historico-evolucoes-container" class="space-y-3">
+                <!-- Inserido dinamicamente via JS -->
               </div>
             </div>
           </div>
@@ -820,37 +770,230 @@
   <div id="modal-patient" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="text-base font-bold text-slate-900">Cadastrar Novo Paciente</h3>
-        <button onclick="closeModal('modal-patient')" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+          <h3 class="text-base font-bold text-slate-900">Cadastrar Novo Paciente</h3>
+        </div>
+        <button onclick="closeModal('modal-patient')" class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none">&times;</button>
       </div>
 
       <div class="space-y-3 text-xs">
         <div>
-          <label class="block font-medium text-slate-700 mb-1">Nome Completo:</label>
-          <input type="text" placeholder="Ex: João da Silva Santos" class="w-full p-2.5 border border-slate-200 rounded-xl">
+          <label class="block font-medium text-slate-700 mb-1">Nome Completo do Paciente *</label>
+          <input type="text" id="novo-nome" placeholder="Ex: João da Silva Santos" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-medium text-slate-700 mb-1">Data de Nascimento:</label>
-            <input type="date" class="w-full p-2.5 border border-slate-200 rounded-xl">
+            <label class="block font-medium text-slate-700 mb-1">Idade / Anos *</label>
+            <input type="number" id="novo-idade" placeholder="Ex: 58" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
           </div>
           <div>
-            <label class="block font-medium text-slate-700 mb-1">Leito / Local:</label>
-            <input type="text" placeholder="Ex: Leito 12 / Domiciliar" class="w-full p-2.5 border border-slate-200 rounded-xl">
+            <label class="block font-medium text-slate-700 mb-1">Sexo *</label>
+            <select id="novo-sexo" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              <option value="Feminino">Feminino</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Leito / Local de Atendimento *</label>
+            <input type="text" id="novo-leito" placeholder="Ex: Leito 05A / Domiciliar" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Diagnóstico Médico</label>
+            <input type="text" id="novo-diag" placeholder="Ex: Pneumonia Comunitária" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
           </div>
         </div>
         <div>
-          <label class="block font-medium text-slate-700 mb-1">Alergias Conhecidas (Separe por vírgulas):</label>
-          <input type="text" placeholder="Ex: Dipirona, Látex" class="w-full p-2.5 border border-slate-200 rounded-xl">
+          <label class="block font-medium text-slate-700 mb-1">Alergias Conhecidas (separe por vírgulas):</label>
+          <input type="text" id="novo-alergias" placeholder="Ex: Dipirona, Penicilina, Nenhuma relatada" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
         </div>
       </div>
 
       <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-        <button onclick="closeModal('modal-patient')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="salvarNovoPaciente()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700">Salvar Paciente</button>
+        <button onclick="closeModal('modal-patient')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 transition">Cancelar</button>
+        <button onclick="salvarNovoPaciente()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition shadow-sm">Salvar no LocalStorage</button>
       </div>
     </div>
   </div>
+
+  <!-- MODAL: VISUALIZAÇÃO E EXPORTAÇÃO DE PDF TIMBRADO (A4) -->
+  <div id="modal-pdf" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 flex flex-col my-auto max-h-[92vh]">
+      
+      <!-- Barra Superior de Controle do PDF (Oculta na impressão) -->
+      <div class="no-print p-4 border-b border-slate-200 bg-slate-50 rounded-t-2xl flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+          <span class="text-xs font-bold text-slate-800">Visualização de Impressão • Laudo Oficial A4</span>
+          <span class="text-[11px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded">Pronto para PDF</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            Imprimir / Salvar como PDF
+          </button>
+          <button onclick="fecharModalPdf()" class="px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition">
+            Fechar
+          </button>
+        </div>
+      </div>
+
+      <!-- Conteúdo do Documento Timbrado Oficial (A4 Printable) -->
+      <div id="documento-pdf-conteudo" class="p-8 sm:p-12 overflow-y-auto text-slate-900 bg-white font-sans text-xs space-y-6">
+        
+        <!-- Cabeçalho do Laudo -->
+        <div class="flex items-start justify-between border-b-2 border-emerald-600 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-2xl shadow-xs">
+              +
+            </div>
+            <div>
+              <div class="text-xl font-black tracking-tight text-slate-900">Enfer<span class="text-emerald-600">Hub</span></div>
+              <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">SISTEMA INTEGRADO DE PRONTUÁRIO &amp; SAE</div>
+              <div class="text-[10px] text-slate-400">Em conformidade com a Resolução COFEN nº 736/2024</div>
+            </div>
+          </div>
+          <div class="text-right text-[11px] text-slate-500">
+            <div><strong>DOCUMENTO CLÍNICO OFICIAL</strong></div>
+            <div id="pdf-data-hora">05/10/2026 às 23:45</div>
+            <div class="text-[10px] text-emerald-700 font-mono" id="pdf-doc-hash">AUTENTICIDADE: EH-4982-BR</div>
+          </div>
+        </div>
+
+        <!-- Bloco de Dados do Paciente -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block font-semibold">Paciente:</span>
+              <strong class="text-xs text-slate-900" id="pdf-paciente-nome">Maria de Lurdes Silveira</strong>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block font-semibold">Prontuário / Leito:</span>
+              <span class="text-xs text-slate-800" id="pdf-paciente-leito">#48291 • Leito 14B</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block font-semibold">Idade / Sexo:</span>
+              <span class="text-xs text-slate-800" id="pdf-paciente-idade">74 anos • Feminino</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block font-semibold">Diagnóstico Médico:</span>
+              <span class="text-xs text-slate-800" id="pdf-paciente-diag">AVC Isquêmico + HAS</span>
+            </div>
+          </div>
+
+          <!-- Alerta de Alergias em Vermelho Clínico -->
+          <div class="pt-2 border-t border-slate-200 flex items-center gap-2 text-rose-700 font-bold text-xs">
+            <span>⚠️ ALERGIAS RELATADAS:</span>
+            <span id="pdf-paciente-alergias" class="bg-rose-100 text-rose-900 px-2 py-0.5 rounded text-[11px]">DIPIRONA, PENICILINA</span>
+          </div>
+        </div>
+
+        <!-- Sinais Vitais do Registro -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 pb-1 mb-2">1. Sinais Vitais &amp; Parâmetros Clínicos</h4>
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs">
+            <div class="p-2 border border-slate-200 rounded-lg bg-white">
+              <span class="text-[10px] text-slate-400 block uppercase">PA</span>
+              <strong>130/85 mmHg</strong>
+            </div>
+            <div class="p-2 border border-slate-200 rounded-lg bg-white">
+              <span class="text-[10px] text-slate-400 block uppercase">FC</span>
+              <strong>78 bpm</strong>
+            </div>
+            <div class="p-2 border border-slate-200 rounded-lg bg-white">
+              <span class="text-[10px] text-slate-400 block uppercase">FR</span>
+              <strong>18 irpm</strong>
+            </div>
+            <div class="p-2 border border-slate-200 rounded-lg bg-white">
+              <span class="text-[10px] text-slate-400 block uppercase">SpO₂</span>
+              <strong>97% AA</strong>
+            </div>
+            <div class="p-2 border border-slate-200 rounded-lg bg-white">
+              <span class="text-[10px] text-slate-400 block uppercase">Temp</span>
+              <strong>36.6 °C</strong>
+            </div>
+            <div class="p-2 border border-slate-200 rounded-lg bg-white">
+              <span class="text-[10px] text-slate-400 block uppercase">HGT</span>
+              <strong>114 mg/dL</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Escalas Validadas (Braden e EVA) -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 pb-1 mb-2">2. Avaliação de Escalas Clínicas</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-3 border border-slate-200 rounded-xl bg-slate-50 flex items-center justify-between">
+              <div>
+                <strong class="text-slate-800">Escala de Braden (Risco de LPP)</strong>
+                <p class="text-[11px] text-slate-500">Avaliação sensorial, umidade e mobilidade</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-bold text-rose-600" id="pdf-braden-score">11 / 23</span>
+                <div class="text-[10px] font-bold text-rose-700 uppercase" id="pdf-braden-label">Alto Risco</div>
+              </div>
+            </div>
+            <div class="p-3 border border-slate-200 rounded-xl bg-slate-50 flex items-center justify-between">
+              <div>
+                <strong class="text-slate-800">Escala Visual Analógica de Dor (EVA)</strong>
+                <p class="text-[11px] text-slate-500">Mensuração de intensidade álgica referida</p>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-bold text-brand-700" id="pdf-pain-score">2 / 10</span>
+                <div class="text-[10px] font-bold text-brand-800 uppercase">Dor Leve</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Texto Integral da Evolução de Enfermagem (Processo de Enfermagem) -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 pb-1 mb-2">3. Evolução de Enfermagem &amp; Diagnósticos (COFEN 736/2024)</h4>
+          <div id="pdf-corpo-evolucao" class="p-4 bg-slate-50/70 border border-slate-200 rounded-xl font-mono text-[11px] text-slate-800 leading-relaxed whitespace-pre-wrap">
+            <!-- Inserido dinamicamente -->
+          </div>
+        </div>
+
+        <!-- Carimbo e Assinatura Profissional -->
+        <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div class="flex items-center gap-3">
+            <!-- QR Code Simulado SVG -->
+            <svg class="w-16 h-16 border border-slate-200 p-1 rounded-lg bg-white" viewBox="0 0 40 40" fill="none">
+              <rect x="2" y="2" width="12" height="12" fill="#047857"/>
+              <rect x="5" y="5" width="6" height="6" fill="#FFFFFF"/>
+              <rect x="26" y="2" width="12" height="12" fill="#047857"/>
+              <rect x="29" y="5" width="6" height="6" fill="#FFFFFF"/>
+              <rect x="2" y="26" width="12" height="12" fill="#047857"/>
+              <rect x="5" y="29" width="6" height="6" fill="#FFFFFF"/>
+              <rect x="18" y="4" width="4" height="8" fill="#0F172A"/>
+              <rect x="18" y="18" width="4" height="4" fill="#047857"/>
+              <rect x="26" y="26" width="8" height="4" fill="#0F172A"/>
+              <rect x="30" y="32" width="6" height="4" fill="#047857"/>
+            </svg>
+            <div class="text-[10px] text-slate-500 leading-tight">
+              <div><strong>Documento Assinado Digitalmente</strong></div>
+              <div>Conforme MP 2.200-2/2001 e Res. COFEN 736/2024.</div>
+              <div>Código de verificação: <span class="font-mono text-emerald-800">EH-7739-SP</span></div>
+            </div>
+          </div>
+
+          <div class="text-center sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0">
+            <div class="w-48 border-b border-slate-400 mb-1.5 mx-auto sm:ml-auto"></div>
+            <strong class="text-xs text-slate-900 block">Enfª. Isis Silva</strong>
+            <span class="text-[11px] text-brand-700 font-semibold block">COREN-SP 542.890-ENF</span>
+            <span class="text-[10px] text-slate-400">Responsável Técnica pelo Registro Clínico</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- RODAPÉ CLEAN -->
   <footer class="bg-white border-t border-slate-200 mt-12 py-6">
@@ -865,8 +1008,369 @@
     </div>
   </footer>
 
-  <!-- SCRIPTS INTERATIVOS -->
+  <!-- SCRIPTS INTERATIVOS & GERENCIADOR LOCALSTORAGE -->
   <script>
+    // ESTADO E PERSISTÊNCIA LOCALSTORAGE
+    const STORAGE_KEY = 'enferhub_pacientes_v1';
+    let pacientes = [];
+    let pacienteAtivoId = 1;
+
+    // Dados iniciais de demonstração (seed)
+    const dadosIniciais = [
+      {
+        id: 1,
+        nome: "Maria de Lurdes Silveira",
+        idade: 74,
+        sexo: "Feminino",
+        prontuario: "#48291",
+        leito: "Leito 14B - Enfermaria Clínica",
+        diagnostico: "AVC Isquêmico + HAS",
+        alergias: "DIPIRONA, PENICILINA",
+        bradenScore: 11,
+        bradenLabel: "Alto Risco",
+        status: "Pendente 18h",
+        evolucoes: [
+          {
+            data: "05/10/2026",
+            hora: "10:30",
+            responsavel: "Enfª. Isis Silva — COREN-SP 542.890-ENF",
+            texto: "Paciente consciente, sonolenta ao despertar. Sinais vitais: PA 130/80, FC 80, SpO2 96%. Pele ressecada em sacro. Instituído protocolo preventivo de decúbito."
+          }
+        ]
+      },
+      {
+        id: 2,
+        nome: "Carlos Eduardo Rezende",
+        idade: 42,
+        sexo: "Masculino",
+        prontuario: "#48305",
+        leito: "Leito 08A - Pós-Operatório",
+        diagnostico: "Pós-op Apendicectomia (1º DPO)",
+        alergias: "Nenhuma conhecida",
+        bradenScore: 20,
+        bradenLabel: "Sem Risco",
+        status: "Evoluído às 14h",
+        evolucoes: [
+          {
+            data: "05/10/2026",
+            hora: "14:00",
+            responsavel: "Enfª. Isis Silva — COREN-SP 542.890-ENF",
+            texto: "Paciente lúcido, queixa de dor moderada em incisão cirúrgica (EVA 4). Curativo cirúrgico oclusivo limpo e seco. Aceitando dieta líquida."
+          }
+        ]
+      },
+      {
+        id: 3,
+        nome: "Juliana Alves Barbosa",
+        idade: 29,
+        sexo: "Feminino",
+        prontuario: "#48312",
+        leito: "Consultório Home Care",
+        diagnostico: "Puerpério Fisiológico / Fissura Mamilar",
+        alergias: "SULFA",
+        bradenScore: 23,
+        bradenLabel: "Sem Risco",
+        status: "Consulta Agendada 16h",
+        evolucoes: [
+          {
+            data: "04/10/2026",
+            hora: "16:15",
+            responsavel: "Enfª. Isis Silva — COREN-SP 542.890-ENF",
+            texto: "Consulta de puerpério domiciliar. Orientada sobre pega correta e livre demanda. Lesão mamilar tratada com laserterapia de baixa intensidade."
+          }
+        ]
+      }
+    ];
+
+    // Inicialização da aplicação
+    function inicializarSistema() {
+      const salvo = localStorage.getItem(STORAGE_KEY);
+      if (salvo) {
+        try {
+          pacientes = JSON.parse(salvo);
+        } catch(e) {
+          pacientes = dadosIniciais;
+          salvarLocalStorage();
+        }
+      } else {
+        pacientes = dadosIniciais;
+        salvarLocalStorage();
+      }
+      renderizarTabelaPacientes();
+      selecionarPaciente(pacienteAtivoId);
+      atualizarMetricasDashboard();
+    }
+
+    function salvarLocalStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pacientes));
+      atualizarMetricasDashboard();
+    }
+
+    // Renderização da tabela do Dashboard
+    function renderizarTabelaPacientes(filtro = '') {
+      const tbody = document.getElementById('tabela-pacientes-tbody');
+      if (!tbody) return;
+
+      const termo = filtro.toLowerCase().trim();
+      const filtrados = pacientes.filter(p => 
+        p.nome.toLowerCase().includes(termo) || 
+        p.leito.toLowerCase().includes(termo) ||
+        p.diagnostico.toLowerCase().includes(termo) ||
+        p.prontuario.toLowerCase().includes(termo)
+      );
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhum paciente encontrado para a busca.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map(p => {
+        const bradenBadge = p.bradenScore <= 12 
+          ? `<span class="inline-flex items-center gap-1 text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full font-semibold text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> ${p.bradenScore} (Alto Risco)</span>`
+          : (p.bradenScore <= 18
+            ? `<span class="inline-flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full font-semibold text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> ${p.bradenScore} (Baixo Risco)</span>`
+            : `<span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ${p.bradenScore} (Sem Risco)</span>`
+          );
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition cursor-pointer" onclick="selecionarPacienteEIr(${p.id})">
+            <td class="py-3.5 px-5">
+              <div class="font-semibold text-slate-900">${p.nome}</div>
+              <div class="text-[11px] text-slate-400">Prontuário ${p.prontuario}</div>
+            </td>
+            <td class="py-3.5 px-4 text-slate-600">
+              ${p.idade} anos <br><span class="text-[11px] text-slate-400">${p.leito}</span>
+            </td>
+            <td class="py-3.5 px-4 text-slate-700">
+              ${p.diagnostico || 'Não informado'}
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="inline-block bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded text-[11px] font-medium truncate max-w-[180px]">
+                ${p.bradenScore <= 12 ? 'Integridade da pele prejudicada' : 'Risco sob controle'}
+              </span>
+            </td>
+            <td class="py-3.5 px-4">
+              ${bradenBadge}
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[11px]">
+                ${p.status}
+              </span>
+            </td>
+            <td class="py-3.5 px-5 text-right">
+              <button class="text-brand-600 hover:text-brand-800 font-semibold text-xs hover:underline">
+                Abrir Prontuário →
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filtrarPacientes(val) {
+      renderizarTabelaPacientes(val);
+    }
+
+    // Selecionar paciente e carregar prontuário
+    function selecionarPaciente(id) {
+      const p = pacientes.find(item => item.id === id) || pacientes[0];
+      if (!p) return;
+
+      pacienteAtivoId = p.id;
+      document.getElementById('paciente-avatar').innerText = p.nome.split(' ').map(n => n[0]).slice(0, 2).join('');
+      document.getElementById('paciente-nome').innerText = p.nome;
+      document.getElementById('paciente-idade').innerText = `${p.idade} anos`;
+      document.getElementById('paciente-leito').innerText = p.leito;
+      document.getElementById('paciente-sexo').innerText = p.sexo;
+      document.getElementById('paciente-prontuario').innerText = p.prontuario;
+      document.getElementById('paciente-cpf').innerText = `142.***.***-0${p.id}`;
+      document.getElementById('paciente-alergias').innerText = p.alergias || 'Nenhuma relatada';
+
+      // Atualiza valores nas escalas
+      renderizarHistoricoEvolucoes(p);
+      gerarEvolucaoAutomatica();
+    }
+
+    function selecionarPacienteEIr(id) {
+      selecionarPaciente(id);
+      switchView('patient');
+    }
+
+    // Histórico de evoluções
+    function renderizarHistoricoEvolucoes(paciente) {
+      const container = document.getElementById('historico-evolucoes-container');
+      if (!container) return;
+
+      if (!paciente.evolucoes || paciente.evolucoes.length === 0) {
+        container.innerHTML = `<div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-400 text-center">Nenhuma evolução anterior arquivada para este paciente.</div>`;
+        return;
+      }
+
+      container.innerHTML = paciente.evolucoes.map((evo, i) => `
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
+          <div class="flex items-center justify-between">
+            <strong class="text-slate-800 font-semibold flex items-center gap-1.5">
+              <span>🩺</span> Registro de ${evo.data} às ${evo.hora}
+            </strong>
+            <span class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-mono">Assinado</span>
+          </div>
+          <p class="text-slate-600 leading-relaxed font-mono text-[11px]">${evo.texto}</p>
+          <div class="text-[10px] text-slate-400 pt-1 border-t border-slate-200">${evo.responsavel}</div>
+        </div>
+      `).join('');
+    }
+
+    // Salvar novo paciente no LocalStorage
+    function salvarNovoPaciente() {
+      const nome = document.getElementById('novo-nome').value.trim();
+      const idade = document.getElementById('novo-idade').value.trim();
+      const sexo = document.getElementById('novo-sexo').value;
+      const leito = document.getElementById('novo-leito').value.trim();
+      const diag = document.getElementById('novo-diag').value.trim();
+      const alergias = document.getElementById('novo-alergias').value.trim() || 'Nenhuma relatada';
+
+      if (!nome || !idade || !leito) {
+        alert("Por favor, preencha o Nome, a Idade e o Leito do paciente.");
+        return;
+      }
+
+      const novoId = Date.now();
+      const novoPaciente = {
+        id: novoId,
+        nome: nome,
+        idade: parseInt(idade),
+        sexo: sexo,
+        prontuario: `#${Math.floor(10000 + Math.random() * 90000)}`,
+        leito: leito,
+        diagnostico: diag || "Em investigação diagnóstica",
+        alergias: alergias,
+        bradenScore: 18,
+        bradenLabel: "Baixo Risco",
+        status: "Pendente Registro",
+        evolucoes: []
+      };
+
+      pacientes.unshift(novoPaciente);
+      salvarLocalStorage();
+      renderizarTabelaPacientes();
+      selecionarPaciente(novoId);
+      closeModal('modal-patient');
+
+      // Limpar formulário
+      document.getElementById('novo-nome').value = '';
+      document.getElementById('novo-idade').value = '';
+      document.getElementById('novo-leito').value = '';
+      document.getElementById('novo-diag').value = '';
+      document.getElementById('novo-alergias').value = '';
+
+      mostrarToast(`✅ Paciente ${nome} salvo no LocalStorage com sucesso!`);
+      switchView('patient');
+    }
+
+    // Atualizar métricas do Dashboard
+    function atualizarMetricasDashboard() {
+      const totalPacientes = pacientes.length;
+      document.getElementById('stat-total-pacientes').innerText = totalPacientes;
+
+      const comAltoRisco = pacientes.filter(p => p.bradenScore <= 12);
+      document.getElementById('stat-risco-braden').innerText = `${comAltoRisco.length} Paciente${comAltoRisco.length !== 1 ? 's' : ''}`;
+      if (comAltoRisco.length > 0) {
+        document.getElementById('stat-detalhe-risco').innerText = `${comAltoRisco[0].nome} (${comAltoRisco[0].leito})`;
+      } else {
+        document.getElementById('stat-detalhe-risco').innerText = "Nenhum caso crítico ativo";
+      }
+
+      const evoluidosHoje = pacientes.filter(p => p.status.includes('Evoluído')).length;
+      document.getElementById('stat-evolucoes-feitas').innerText = `${evoluidosHoje} / ${totalPacientes}`;
+      document.getElementById('stat-pendentes').innerText = `⏳ ${totalPacientes - evoluidosHoje} aguardando fechamento`;
+    }
+
+    // Modal de PDF Timbrado Oficial
+    function abrirModalPdf() {
+      const p = pacientes.find(item => item.id === pacienteAtivoId) || pacientes[0];
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      const horaAtual = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
+      document.getElementById('pdf-data-hora').innerText = `${dataAtual} às ${horaAtual}`;
+      document.getElementById('pdf-doc-hash').innerText = `AUTENTICIDADE: EH-${Math.floor(1000 + Math.random() * 9000)}-SP`;
+      document.getElementById('pdf-paciente-nome').innerText = p.nome;
+      document.getElementById('pdf-paciente-leito').innerText = `${p.prontuario} • ${p.leito}`;
+      document.getElementById('pdf-paciente-idade').innerText = `${p.idade} anos • ${p.sexo}`;
+      document.getElementById('pdf-paciente-diag').innerText = p.diagnostico || 'Não informado';
+      document.getElementById('pdf-paciente-alergias').innerText = p.alergias || 'Nenhuma relatada';
+
+      const bradenScore = document.getElementById('braden-total').innerText;
+      const bradenClass = document.getElementById('braden-classificacao').innerText;
+      document.getElementById('pdf-braden-score').innerText = bradenScore;
+      document.getElementById('pdf-braden-label').innerText = bradenClass;
+
+      const painScore = document.getElementById('pain-val').innerText;
+      document.getElementById('pdf-pain-score').innerText = painScore.split(' - ')[0] + ' / 10';
+
+      const texto = document.getElementById('texto-evolucao').value;
+      document.getElementById('pdf-corpo-evolucao').innerText = texto;
+
+      document.getElementById('modal-pdf').classList.remove('hidden');
+    }
+
+    function fecharModalPdf() {
+      document.getElementById('modal-pdf').classList.add('hidden');
+    }
+
+    // Salvar evolução no prontuário do paciente ativo
+    function salvarEvolucao() {
+      const p = pacientes.find(item => item.id === pacienteAtivoId);
+      if (!p) return;
+
+      const texto = document.getElementById('texto-evolucao').value.trim();
+      if (!texto) {
+        alert("O texto da evolução não pode estar vazio.");
+        return;
+      }
+
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      const horaAtual = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
+      if (!p.evolucoes) p.evolucoes = [];
+      p.evolucoes.unshift({
+        data: dataAtual,
+        hora: horaAtual,
+        responsavel: "Enfª. Isis Silva — COREN-SP 542.890-ENF",
+        texto: texto
+      });
+
+      p.status = `Evoluído às ${horaAtual}`;
+      salvarLocalStorage();
+      renderizarHistoricoEvolucoes(p);
+      renderizarTabelaPacientes();
+
+      mostrarToast(`✅ Evolução de ${p.nome} salva e assinada no prontuário!`);
+    }
+
+    function copiarEvolucao() {
+      const copyText = document.getElementById("texto-evolucao");
+      navigator.clipboard.writeText(copyText.value);
+      mostrarToast("📋 Texto da evolução copiado para a área de transferência!");
+    }
+
+    // Toast flutuante de feedback
+    function mostrarToast(mensagem) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = "bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg border border-slate-700 flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto";
+      toast.innerHTML = `<span>${mensagem}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
     // Navegação entre Views
     function switchView(viewName) {
       document.getElementById('view-dashboard').classList.add('hidden');
@@ -880,6 +1384,7 @@
       if(viewName === 'dashboard') {
         document.getElementById('view-dashboard').classList.remove('hidden');
         document.getElementById('nav-dashboard').className = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm font-semibold transition";
+        renderizarTabelaPacientes();
       } else if(viewName === 'patient') {
         document.getElementById('view-patient').classList.remove('hidden');
         document.getElementById('nav-patient').className = "px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm font-semibold transition";
@@ -920,22 +1425,32 @@
       const classifEl = document.getElementById('braden-classificacao');
       totalEl.innerText = `${soma} / 23`;
 
+      let label = 'Sem Risco';
       if(soma <= 12) {
-        classifEl.innerText = 'Alto Risco';
+        label = 'Alto Risco';
         classifEl.className = 'text-[11px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold';
         totalEl.className = 'text-2xl font-black text-rose-600';
       } else if(soma <= 14) {
-        classifEl.innerText = 'Risco Moderado';
+        label = 'Risco Moderado';
         classifEl.className = 'text-[11px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold';
         totalEl.className = 'text-2xl font-black text-amber-600';
       } else if(soma <= 18) {
-        classifEl.innerText = 'Baixo Risco';
+        label = 'Baixo Risco';
         classifEl.className = 'text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold';
         totalEl.className = 'text-2xl font-black text-blue-600';
       } else {
-        classifEl.innerText = 'Sem Risco';
+        label = 'Sem Risco';
         classifEl.className = 'text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold';
         totalEl.className = 'text-2xl font-black text-emerald-600';
+      }
+      classifEl.innerText = label;
+
+      // Atualiza o paciente ativo
+      const p = pacientes.find(item => item.id === pacienteAtivoId);
+      if (p) {
+        p.bradenScore = soma;
+        p.bradenLabel = label;
+        salvarLocalStorage();
       }
     }
 
@@ -952,6 +1467,7 @@
 
     // Gerador de Texto Técnico de Evolução de Enfermagem
     function gerarEvolucaoAutomatica() {
+      const p = pacientes.find(item => item.id === pacienteAtivoId) || pacientes[0];
       const neuro = document.getElementById('ef-neurologico').value;
       const resp = document.getElementById('ef-respiratorio').value;
       const cardio = document.getElementById('ef-cardio').value;
@@ -959,34 +1475,35 @@
       const pele = document.getElementById('ef-pele').value;
       const acesso = document.getElementById('ef-acesso').value;
       const bradenScore = document.getElementById('braden-total').innerText;
+      const dor = document.getElementById('pain-val').innerText;
 
       const dataAtual = new Date().toLocaleDateString('pt-BR');
       const horaAtual = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
       const evolucao = 
 `[EVOLUÇÃO DE ENFERMAGEM - ${dataAtual} às ${horaAtual}]
-PACIENTE: Maria de Lurdes Silveira | LEITO: 14B | DIAGNÓSTICO MÉDICO: AVC Isquêmico + HAS
+PACIENTE: ${p.nome} | ${p.leito} | DIAGNÓSTICO MÉDICO: ${p.diagnostico}
 
 SINAIS VITAIS:
-PA: 130/85 mmHg | FC: 78 bpm | FR: 18 irpm | SpO₂: 97% em AA | Tax: 36.6 °C | HGT: 114 mg/dL | EVA Dor: 2/10.
+PA: 130/85 mmHg | FC: 78 bpm | FR: 18 irpm | SpO₂: 97% em AA | Tax: 36.6 °C | HGT: 114 mg/dL | EVA Dor: ${dor}.
 
 AVALIAÇÃO CÉFALO-CAUDAL (EXAME FÍSICO):
 - Neurológico: ${neuro}. Pupilas isocóricas e fotorreagentes.
 - Respiratório: ${resp}. Padrão eupnéico.
-- Cardiovascular: ${cardio}. Edema de membros inferiores presente (+/4+).
-- Trato Gastrointestinal: ${abdome}. Dieta hipossódica bem tolerada.
-- Tegumentar: ${pele}. Braden: ${bradenScore} (Alto Risco para Lesão por Pressão).
-- Dispositivos: ${acesso}.
+- Cardiovascular: ${cardio}.
+- Trato Gastrointestinal: ${abdome}.
+- Tegumentar: ${pele}. Braden: ${bradenScore}.
+- Dispositivos Invasivos: ${acesso}.
 
 DIAGNÓSTICOS DE ENFERMAGEM (COFEN 736/2024):
-1. Integridade da pele prejudicada r/a imobilidade física e umidade.
+1. Integridade da pele prejudicada r/a mobilidade física diminuída e umidade.
 2. Risco de lesão por pressão associado a escore de Braden crítico.
 3. Risco de quedas r/a déficit motor sequelar.
 
 CONDUTA & PRESCRIÇÃO:
 - Instituído protocolo de mudança de decúbito de 2/2h com coxim de alívio.
 - Hidratação de pele e AGE em região sacral mantidos.
-- Grades do leito elevadas. Orientado acompanhante quanto a prevenção de quedas.
+- Grades do leito elevadas. Orientado paciente e acompanhante sobre prevenção de quedas.
 
 Enfª. Isis Silva — COREN-SP 542.890-ENF`;
 
@@ -1005,18 +1522,6 @@ Enfª. Isis Silva — COREN-SP 542.890-ENF`;
       document.getElementById('res-micro').innerText = `${microgotas} microgts/min`;
     }
 
-    // Ações de feedback
-    function copiarEvolucao() {
-      const copyText = document.getElementById("texto-evolucao");
-      navigator.clipboard.writeText(copyText.value);
-      alert("✅ Texto da evolução copiado para a área de transferência!");
-    }
-
-    function salvarEvolucao() {
-      alert("✅ Evolução de Enfermagem assinada e salva com sucesso no prontuário!");
-      switchView('dashboard');
-    }
-
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
     }
@@ -1025,10 +1530,8 @@ Enfª. Isis Silva — COREN-SP 542.890-ENF`;
       document.getElementById(id).classList.add('hidden');
     }
 
-    function salvarNovoPaciente() {
-      alert("✅ Paciente cadastrado com sucesso no sistema!");
-      closeModal('modal-patient');
-    }
+    // Iniciar tudo ao carregar
+    window.addEventListener('DOMContentLoaded', inicializarSistema);
   </script>
 </body>
 </html>
